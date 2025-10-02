@@ -46,10 +46,11 @@ rollback:
 	bash ci/scripts/rollback.sh
 
 fail:
-	@curl -s 'http://localhost/toggle?defect=0.2&slow=1' || true
+	@docker run --rm --network canary_lab curlimages/curl -s "http://api-v2:8000/toggle?defect=0.2&slow=1" || true
 
 heal:
-	@curl -s 'http://localhost/toggle?defect=0.0&slow=0' || true
+	@docker run --rm --network canary_lab curlimages/curl -s "http://api-v2:8000/toggle?defect=0.0&slow=0" || true
+
 
 policy:
 	docker run --rm -v "$$(pwd):/repo" bridgecrew/checkov checkov -d /repo || true
