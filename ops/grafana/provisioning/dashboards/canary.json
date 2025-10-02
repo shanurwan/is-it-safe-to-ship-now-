@@ -1,0 +1,10 @@
+{
+"title": "Canary Health",
+"panels": [
+{"type": "graph", "title": "5xx rate", "targets": [{"expr": "job:http_5xx_rate"}]},
+{"type": "graph", "title": "p95 latency (s)", "targets": [{"expr": "job:http_request_duration_seconds:p95"}]},
+{"type": "graph", "title": "Availability", "targets": [{"expr": "job:http_availability"}]}
+],
+"schemaVersion": 39,
+"version": 1
+}

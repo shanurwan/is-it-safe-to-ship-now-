@@ -1,0 +1,26 @@
+http:
+  routers:
+    api:
+      rule: PathPrefix(`/`)
+      service: canary
+      entryPoints:
+        - web
+
+  services:
+    canary:
+      weighted:
+        services:
+          - name: v1
+            weight: 95
+          - name: v2
+            weight: 5
+
+    v1:
+      loadBalancer:
+        servers:
+          - url: http://api-v1:8000
+
+    v2:
+      loadBalancer:
+        servers:
+          - url: http://api-v2:8000
