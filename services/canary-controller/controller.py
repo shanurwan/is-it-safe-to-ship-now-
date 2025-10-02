@@ -52,9 +52,8 @@ def set_weights(v1: int, v2: int) -> None:
 def healthy() -> bool:
     five_xx = q(query_5xx)
     p95 = q(query_p95)
-    ok = (
-        five_xx <= SLO["error_rate_5xx"]["target"]
-        and p95 <= (SLO["latency_p95_ms"]["target"] / 1000.0)
+    ok = five_xx <= SLO["error_rate_5xx"]["target"] and p95 <= (
+        SLO["latency_p95_ms"]["target"] / 1000.0
     )
     print({"5xx": five_xx, "p95": p95, "healthy": ok})
     return ok
