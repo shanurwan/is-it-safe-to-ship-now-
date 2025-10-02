@@ -1,5 +1,3 @@
-version: "3.9"
-
 
 x-env: &default-env
   PROMETHEUS_URL: http://prometheus:9090
@@ -15,13 +13,11 @@ services:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
     ports:
-      - "8080:8080"  # Traefik dashboard
+      - "8080:8080"   # Traefik dashboard
       - "80:80"
     volumes:
       - ./ops/traefik/dynamic:/dynamic
     networks: [lab]
-    # uncomment if you want these envs in the container:
-    # environment: *default-env
 
   prometheus:
     image: prom/prometheus:v2.55.0
@@ -52,6 +48,51 @@ services:
       - ./ops/grafana/provisioning:/etc/grafana/provisioning
       - ./ops/grafana/dashboards:/var/lib/grafana/dashboards
     networks: [lab]
+
+  # === App services expected by Makefile/Traefik dynamic config ===
+  api-v1:
+    build: ./services/api/v1   # or: image: lab/api:v1
+    environment:
+      VERSION: v1
+    networks: [lab]
+
+  api-v2:
+    build: ./services/api/v2   # or: image: lab/api:v2
+    environment:
+      VERSION: v2
+      DEFECT_RATE: "0"         # can be changed via /toggle
+      SLOW_MODE: "0"
+    networks: [lab]
+
+  # Alertmanager webhook → rolls back canary (writes Traefik dynamic YAML)
+  rollbacker:
+    build: ./services/rollbacker
+    environment: *default-env
+    volumes:
+      - ./ops/traefik/dynamic:/dynamic
+    networks: [lab]
+
+  # Canary controller (reads SLO.json + Prometheus; updates Traefik YAML)
+  canary-controller:
+    build: ./services/canary-controller
+    environment: *default-env
+    volumes:
+      - ./ops/traefik/dynamic:/dynamic
+      - ./SLO.json:/SLO.json:ro
+    networks: [lab]
+    depends_on:
+      - prometheus
+      - traefik
+
+  # Simple load generator (traffic)
+  traffic:
+    build: ./services/traffic
+    environment:
+      TARGET: http://traefik
+      RATE: "100"
+    networks: [lab]
+    depends_on:
+      - traefik
 
 networks:
   lab:
