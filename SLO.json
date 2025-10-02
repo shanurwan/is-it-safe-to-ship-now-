@@ -1,5 +1,0 @@
-{
-"availability": { "target": 0.999, "window": "7d" },
-"latency_p95_ms": { "target": 250, "window": "1h" },
-"error_rate_5xx": { "target": 0.005, "window": "30m" }
-}
