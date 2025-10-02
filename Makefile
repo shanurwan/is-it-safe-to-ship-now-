@@ -29,17 +29,18 @@ canary:
 	docker compose run --rm canary-controller python /app/controller.py
 
 promote:
-	python - <<'PY'
-import yaml
-p = 'ops/traefik/dynamic/traefik-dynamic.yml'
-with open(p, 'r') as f:
-    d = yaml.safe_load(f)
-d['http']['services']['canary']['weighted']['services'][0]['weight'] = 0
-d['http']['services']['canary']['weighted']['services'][1]['weight'] = 100
-with open(p, 'w') as f:
-    yaml.safe_dump(d, f, sort_keys=False)
-print('Promoted v2 100%')
-PY
+	python - <<-'PY'
+	import yaml
+	p = 'ops/traefik/dynamic/traefik-dynamic.yml'
+	with open(p, 'r') as f:
+	    d = yaml.safe_load(f)
+	d['http']['services']['canary']['weighted']['services'][0]['weight'] = 0
+	d['http']['services']['canary']['weighted']['services'][1]['weight'] = 100
+	with open(p, 'w') as f:
+	    yaml.safe_dump(d, f, sort_keys=False)
+	print('Promoted v2 100%')
+	PY
+
 
 rollback:
 	bash ci/scripts/rollback.sh
