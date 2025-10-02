@@ -1,0 +1,98 @@
+x-env: &default-env
+  PROMETHEUS_URL: http://prometheus:9090
+  TRAEFIK_DYNAMIC_PATH: /dynamic/traefik-dynamic.yml
+
+services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --api.insecure=true
+      - --metrics.prometheus=true
+      - --providers.file.directory=/dynamic
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "8080:8080"
+      - "80:80"
+    volumes:
+      - ./ops/traefik/dynamic:/dynamic
+    networks: [lab]
+
+  prometheus:
+    container_name: prometheus        # <- stable DNS name
+    image: prom/prometheus:v2.55.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/prometheus/rules:/etc/prometheus/rules:ro
+    networks:
+      lab:
+        aliases: [prometheus]
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    volumes:
+      - ./ops/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks: [lab]
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards
+    networks: [lab]
+
+  api-v1:
+    build: ./services/api/v1
+    environment:
+      VERSION: v1
+    networks: [lab]
+
+  api-v2:
+    build: ./services/api/v2
+    environment:
+      VERSION: v2
+      DEFECT_RATE: "0"
+      SLOW_MODE: "0"
+    networks: [lab]
+
+  rollbacker:
+    build: ./services/rollbacker
+    environment: *default-env
+    volumes:
+      - ./ops/traefik/dynamic:/dynamic
+    networks: [lab]
+
+  canary-controller:
+    build: ./services/canary-controller
+    environment: *default-env
+    volumes:
+      - ./ops/traefik/dynamic:/dynamic
+      - ./SLO.json:/SLO.json:ro
+    networks: [lab]
+    depends_on:
+      - prometheus
+      - traefik
+    command: ["sleep", "infinity"]  # keep running so we can exec into it
+
+  traffic:
+    build: ./services/traffic
+    environment:
+      TARGET: http://traefik
+      RATE: "100"
+    networks: [lab]
+    depends_on: [traefik]
+
+networks:
+  lab:
+    name: canary_lab
+    driver: bridge

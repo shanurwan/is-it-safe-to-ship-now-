@@ -1,0 +1,9 @@
+NAME                         IMAGE                       COMMAND                  SERVICE             CREATED          STATUS          PORTS
+canary-alertmanager-1        prom/alertmanager:v0.27.0   "/bin/alertmanager -…"   alertmanager        14 minutes ago   Up 14 minutes   9093/tcp
+canary-api-v1-1              canary-api-v1               "uvicorn app:app --h…"   api-v1              14 minutes ago   Up 14 minutes   8000/tcp
+canary-api-v2-1              canary-api-v2               "uvicorn app:app --h…"   api-v2              12 minutes ago   Up 12 minutes   8000/tcp
+canary-canary-controller-1   canary-canary-controller    "sleep infinity"         canary-controller   12 minutes ago   Up 12 minutes   
+canary-grafana-1             grafana/grafana:11.1.4      "/run.sh"                grafana             14 minutes ago   Up 14 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+canary-traefik-1             traefik:v3.1                "/entrypoint.sh --ap…"   traefik             14 minutes ago   Up 14 minutes   0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+canary-traffic-1             canary-traffic              "python driver.py"       traffic             12 minutes ago   Up 12 minutes   
+prometheus                   prom/prometheus:v2.55.0     "/bin/prometheus --c…"   prometheus          14 minutes ago   Up 14 minutes   0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
