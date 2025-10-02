@@ -1,0 +1,1 @@
+{"status":"success","data":{"resultType":"matrix","result":[{"metric":{"__name__":"job:http_5xx_rate"},"values":[[1759434024,"0"],[1759434039,"0"]]}]}}

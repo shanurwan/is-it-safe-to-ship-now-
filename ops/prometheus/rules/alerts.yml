@@ -1,0 +1,19 @@
+groups:
+- name: slo-alerts
+  rules:
+  - alert: High5xxRate
+    expr: job:http_5xx_rate > 0.005
+    for: 2m
+    labels:
+      severity: page
+    annotations:
+      summary: "5xx rate above SLO"
+
+  - alert: HighLatencyP95
+    expr: job:http_request_duration_seconds:p95 > 0.25
+    for: 2m
+    labels:
+      severity: page
+    annotations:
+      summary: "p95 latency above SLO"
+
