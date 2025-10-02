@@ -13,16 +13,17 @@ with open("/SLO.json", "r") as f:
 STEPS = [5, 30, 100]  # % traffic to v2 at each step
 WINDOW_SEC = 60
 
-query_5xx = "job:http_5xx_rate"
-query_p95 = "job:http_request_duration_seconds:p95"
+query_5xx = "(job:http_5xx_rate) or vector(0)"
+query_p95 = "(job:http_request_duration_seconds:p95) or vector(0)"
 
 
 def q(expr: str) -> float:
-    """Query a single Prometheus instant vector and return its first value as float, or 0.0."""
     try:
         r = requests.get(f"{PROM}/api/v1/query", params={"query": expr}, timeout=5)
         r.raise_for_status()
         payload = r.json()
+        if not payload["data"]["result"]:
+            return 0.0
         return float(payload["data"]["result"][0]["value"][1])
     except Exception as e:
         print(f"Query failed for {expr}: {e}")
@@ -75,7 +76,23 @@ def run_canary() -> bool:
     return True
 
 
+def wait_for_prom(timeout=90, interval=2) -> bool:
+    url = f"{PROM}/-/ready"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            r = requests.get(url, timeout=2)
+            if r.status_code == 200:
+                return True
+        except Exception:
+            pass
+        time.sleep(interval)
+    print(f"Prometheus not ready after {timeout}s at {url}")
+    return False
+
+
 if __name__ == "__main__":
+    wait_for_prom()
     ok = run_canary()
     with open("/app/result.txt", "w") as f:
         f.write("promoted" if ok else "rolled back")

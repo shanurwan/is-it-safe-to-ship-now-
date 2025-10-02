@@ -10,9 +10,9 @@ http:
       weighted:
         services:
         - name: v1
-          weight: 100
-        - name: v2
           weight: 0
+        - name: v2
+          weight: 100
     v1:
       loadBalancer:
         servers:

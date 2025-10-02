@@ -25,8 +25,8 @@ stop-traffic:
 	docker compose rm -sf traffic || true
 
 canary:
-	docker compose up -d api-v2
-	docker compose run --rm canary-controller python /app/controller.py
+	docker compose up -d api-v2 canary-controller
+	docker compose exec canary-controller python /app/controller.py
 
 promote:
 	python - <<-'PY'
@@ -69,3 +69,10 @@ destroy:
 
 ci-act:
 	act -W .github/workflows/deploy.yml -j deploy || true
+
+evidence:
+	@echo "Collecting compose logs and Prometheus snapshots..."
+	docker compose logs > compose.log
+	curl -s "http://localhost:9090/api/v1/query?query=(job:http_5xx_rate)%20or%20vector(0)" | jq . > prom_5xx.json || true
+	curl -s "http://localhost:9090/api/v1/query?query=(job:http_request_duration_seconds:p95)%20or%20vector(0)" | jq . > prom_p95.json || true
+	@echo "Artifacts: compose.log, prom_5xx.json, prom_p95.json"
