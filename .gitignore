@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env
+
+
+# Node/others
+node_modules/
+
+
+# Docker
+*.log
+
+
+# macOS
+.DS_Store
+
+
+# act
+.act/
